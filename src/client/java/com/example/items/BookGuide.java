@@ -17,11 +17,11 @@ public class BookGuide extends Item {
         super(settings);
     }
 
-   @Override
+    @Override
     public ActionResult use(World world, PlayerEntity user, Hand hand) {
         ItemStack itemStack = user.getStackInHand(hand);
 
-       MinecraftClient.getInstance().setScreen(new ScreenBook(new Gui()));
+        MinecraftClient.getInstance().setScreen(new ScreenBook(new Gui()));
 
         return super.use(world, user, hand);
     }
