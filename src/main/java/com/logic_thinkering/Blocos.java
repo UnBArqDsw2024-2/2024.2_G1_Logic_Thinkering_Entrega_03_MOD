@@ -1,6 +1,6 @@
 package com.logic_thinkering;
 
-import com.logic_thinkering.block.AutoMiningBlock;
+import com.logic_thinkering.block.miningmachine.MiningMachineBlock;
 import com.logic_thinkering.block.ClockEnergy;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.minecraft.block.AbstractBlock;
@@ -16,7 +16,7 @@ public class Blocos {
 
     public static final Block BLOCO_MINERACAO = RegisterBlock.registrarBloco(
             "bloco_mineracao",
-            AutoMiningBlock::new,
+            MiningMachineBlock::new,
             AbstractBlock.Settings.create().strength(4f).requiresTool()
     );
 
@@ -26,7 +26,7 @@ public class Blocos {
             AbstractBlock.Settings.create().strength(4f).requiresTool()
     );
 
-    public static void Inicializa() {
+    public static void inicializa() {
         ItemGroupEvents.modifyEntriesEvent(LogicThinkeringItemGroup.LOGICTHINKERING_GROUP).register(entries -> {
             entries.add(Blocos.CLOCK);
             entries.add(Blocos.BLOCO_MINERACAO);

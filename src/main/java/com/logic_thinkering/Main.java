@@ -1,5 +1,7 @@
 package com.logic_thinkering;
 
+import com.logic_thinkering.network.NetworkRegistry;
+import com.logic_thinkering.screenhandler.ModScreenHandlers;
 import net.fabricmc.api.ModInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,7 +12,11 @@ public class Main implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
-		Blocos.Inicializa();
+		Blocos.inicializa();
+		BlockEntities.inicializa();
+		ModScreenHandlers.inicializa();
+		NetworkRegistry.registerPackets();
+		Blocos.inicializa();
 		new LogicThinkeringItem();
 		LogicThinkeringKotlin.INSTANCE.initialize();
 		LOGGER.info("OK");
