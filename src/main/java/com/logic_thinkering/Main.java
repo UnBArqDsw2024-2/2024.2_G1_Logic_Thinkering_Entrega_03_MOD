@@ -18,7 +18,7 @@ public class Main implements ModInitializer {
 		NetworkRegistry.registerPackets();
 		Blocos.inicializa();
 		new LogicThinkeringItem();
-		LogicThinkeringKotlinKt.initialize();
+		LogicThinkeringKotlin.INSTANCE.initialize();
 		LOGGER.info("OK");
 	}
 }
