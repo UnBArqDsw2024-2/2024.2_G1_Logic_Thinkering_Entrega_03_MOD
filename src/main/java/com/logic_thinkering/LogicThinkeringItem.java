@@ -18,7 +18,6 @@ public class LogicThinkeringItem {
     public List<LogicThinkeringToolMaterial> toolMaterials = new ArrayList<>();
 
     public LogicThinkeringItem() {
-
         items.add(new ConcreteItem("reinforced_copper_ingot"));
         insertCommonItem("reinforced_emerald_shard");
         insertCommonItem("reinforced_amethyst_shard");
