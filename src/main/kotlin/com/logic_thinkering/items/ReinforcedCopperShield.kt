@@ -18,7 +18,7 @@ class ReinforcedCopperShield(name: String = "reinforced_copper_shield"): ShieldI
     Settings().maxDamage(336).registryKey(
         RegistryKey.of(
             RegistryKeys.ITEM,
-            Identifier.of(MOD_ID, name)
+            Identifier.of(LogicThinkeringKotlin.MOD_ID, name)
         )
     )
 ) {

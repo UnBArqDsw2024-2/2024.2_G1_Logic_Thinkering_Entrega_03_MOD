@@ -1,5 +1,6 @@
 package com.logic_thinkering
 
+import com.logic_thinkering.LogicThinkeringKotlin.MOD_ID
 import com.logic_thinkering.items.ReinforcedCopperShield
 import com.logic_thinkering.items.ReinforcedCopperSword
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents

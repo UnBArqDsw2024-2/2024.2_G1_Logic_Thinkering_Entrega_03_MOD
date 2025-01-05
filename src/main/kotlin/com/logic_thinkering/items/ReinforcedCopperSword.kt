@@ -32,7 +32,7 @@ class ReinforcedCopperSword(
     settings: Settings = Settings().registryKey(
         RegistryKey.of(
             RegistryKeys.ITEM,
-            Identifier.of(MOD_ID, name)
+            Identifier.of(LogicThinkeringKotlin.MOD_ID, name)
         )
     )
 ) : SwordItem(material, 4.0F, 5.0F, settings) {

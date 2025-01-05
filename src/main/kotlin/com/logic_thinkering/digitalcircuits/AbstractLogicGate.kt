@@ -32,7 +32,7 @@ data class InputPower(
  * @param logicStrategy a strategy for the respective logic gate
  * indicating whether the gate should be powered
  */
-abstract class AbstractLogicGate(settings: Settings, val logicStrategy: LogicStrategy) :
+abstract class AbstractLogicGate(settings: Settings, private val logicStrategy: LogicStrategy) :
     AbstractRedstoneGateBlock(settings) {
     init {
         defaultState = stateManager.defaultState
@@ -74,7 +74,7 @@ abstract class AbstractLogicGate(settings: Settings, val logicStrategy: LogicStr
      * @param state The current state of the block.
      * @return An `InputPower` object containing the power status from the east, west, and south neighbors.
      */
-    protected fun getInputPower(world: World, pos: BlockPos, state: BlockState) : InputPower{
+    private fun getInputPower(world: World, pos: BlockPos, state: BlockState) : InputPower{
         val facing = state[FACING]
          return InputPower(
              hasPowerFromNeighbor(world, pos, facing.rotateYClockwise()),
