@@ -90,6 +90,26 @@ class BlockRegistryBuilder {
      */
     fun with(init: BlockInit, name: String) = apply { blocks += init to name }
 
+
+    private fun registerBlock(init: BlockInit, name: String, registerItem: Boolean) : Pair<Block, String> {
+        logger.info("Registering $name block")
+        val id = Identifier.of(MOD_ID, name)
+        val key = RegistryKey.of(RegistryKeys.BLOCK, id)
+        val settings = baseSettings!!.registryKey(key)
+        val block = init(settings)
+        Registry.register(Registries.BLOCK, id, block).also {
+            if (registerItem) {
+                val itemKey = RegistryKey.of(RegistryKeys.ITEM, id)
+                val itemSettings = Item.Settings().registryKey(itemKey)
+                Registry.register(Registries.ITEM, id, BlockItem(it, itemSettings))
+                ItemGroupEvents.modifyEntriesEvent(itemGroup).register {it.add(block)}
+            }
+        }
+
+        return block to name
+    }
+
+
     /**
      * Registers all blocks in the registry, using the provided settings and item group.
      * This method also ensures that the all the items will be registered for each block
