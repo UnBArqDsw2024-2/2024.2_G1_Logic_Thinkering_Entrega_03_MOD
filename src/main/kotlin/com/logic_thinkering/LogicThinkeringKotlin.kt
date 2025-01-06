@@ -3,11 +3,10 @@ package com.logic_thinkering
 import com.logic_thinkering.digitalcircuits.*
 import com.logic_thinkering.items.ReinforcedCopperShield
 import com.logic_thinkering.items.ReinforcedCopperSword
-import com.logic_thinkering.registration.buildRegistryHelper
-import com.logic_thinkering.registration.registerItems
+import com.logic_thinkering.registration.register
 import net.minecraft.block.AbstractBlock.Settings
 import net.minecraft.block.Blocks
-import net.minecraft.item.ItemGroups
+import net.minecraft.item.Item
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -17,30 +16,26 @@ val logger: Logger = LoggerFactory.getLogger(MOD_ID)
 fun initialize() {
     logger.info("Initializing Logic Thinkering mod, Kotlin side!")
 
-    buildRegistryHelper {
-        group(LogicThinkeringItemGroup.LOGICTHINKERING_GROUP)
-        settings(Settings.copy(Blocks.REPEATER))
-        registerItems(true)
-        decorator {
-            if (it is AbstractLogicGate)
-                LogicLoggerDecorator(it)
-            else
-                it
+    val group = LogicThinkeringItemGroup.LOGICTHINKERING_GROUP
+    register {
+        items {
+            itemGroup = group
+            ::ReinforcedCopperSword with "reinforced_copper_sword"
+            ::ReinforcedCopperShield with {
+                settings = Item.Settings().maxDamage(336)
+                name = "reinforced_copper_shield"
+            }
         }
-        ::ORGate with "or_gate"
-        ::ANDGate with "and_gate"
-        ::XORGate with "xor_gate"
-        ::NOTGate with "not_gate"
-        ::NORGate with "nor_gate"
-        ::NANDGate with "nand_gate"
-        ::XNORGate with "xnor_gate"
+        blocks {
+            settings = Settings.copy(Blocks.REPEATER)
+            itemGroup = group
+            ::ORGate with "or_gate"
+            ::ANDGate with "and_gate"
+            ::XORGate with "xor_gate"
+            ::NOTGate with "not_gate"
+            ::NORGate with "nor_gate"
+            ::NANDGate with "nand_gate"
+            ::XNORGate with "xnor_gate"
+        }
     }.register()
-
-    registerItems {
-        group(ItemGroups.COMBAT)
-        ReinforcedCopperShield() with "reinforced_copper_shield"
-        ReinforcedCopperSword() with "reinforced_sword"
-    }.register()
-
-    ModComponents.initialize()
 }
