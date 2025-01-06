@@ -12,7 +12,7 @@ import net.minecraft.util.Identifier
 annotation class RegistryDsl
 
 data class ItemBuilderConfig (
-    var init: ItemInit,
+    var init: ItemFactory,
     var itemGroup: RegistryKey<ItemGroup>,
     var settings: Item.Settings,
     var name: String? = null,
@@ -20,25 +20,35 @@ data class ItemBuilderConfig (
 
 @RegistryDsl
 class ItemRegistryGroup {
-    private val _items: MutableMap<ItemInit, ItemBuilderConfig> = HashMap()
+    private val _itemsFactories: MutableList<Pair<ItemFactory, ItemBuilderConfig>> = mutableListOf()
+    private val _items: MutableList<Triple<Item, String, RegistryKey<ItemGroup>>> = mutableListOf()
     var itemGroup: RegistryKey<ItemGroup>? = null
     var settings: Item.Settings = Item.Settings()
 
-    val items: Map<ItemInit, ItemBuilderConfig>
+    val itemFactories: List<Pair<ItemFactory, ItemBuilderConfig>>
+        get() = _itemsFactories
+
+    val items: List<Triple<Item, String, RegistryKey<ItemGroup>>>
         get() = _items
 
-    infix fun ItemInit.with(config: ItemBuilderConfig.() -> Unit) {
+    infix fun ItemFactory.with(config: ItemBuilderConfig.() -> Unit) {
         checkNotNull(itemGroup) { "Item group must be specified for item" }
         val configObject = ItemBuilderConfig(this, itemGroup!!, settings)
         configObject.config()
         checkNotNull(configObject.name) { "Name must be specified for block." }
-        _items[this] = configObject
+        _itemsFactories += this to configObject
     }
 
-    infix fun ItemInit.with(name: String) {
+    infix fun ItemFactory.with(name: String) {
         checkNotNull(itemGroup) { "Item group must be specified for item" }
-        _items[this] = ItemBuilderConfig(this, itemGroup!!, settings,name)
+        _itemsFactories += this to ItemBuilderConfig(this, itemGroup!!, settings,name)
     }
+    
+    infix fun Item.with(name: String) {
+        checkNotNull(itemGroup) { "Item group must be specified for item" }
+        _items += Triple(this, name, itemGroup!!)
+    }
+
 }
 
 
@@ -51,53 +61,64 @@ data class BlockBuilderConfig (
 
 @RegistryDsl
 class BlockRegistryGroup {
-    private val _blocks : MutableMap<BlockInit, BlockBuilderConfig> = HashMap()
+    private val _blockFactories : MutableMap<BlockInit, BlockBuilderConfig> = HashMap()
+    private val _blocks : MutableList<Triple<Block, String, RegistryKey<ItemGroup>?>> = mutableListOf()
     var itemGroup: RegistryKey<ItemGroup>? = null
     var settings: AbstractBlock.Settings = AbstractBlock.Settings.create()
 
-    val blocks: Map<BlockInit, BlockBuilderConfig>
+    val blocks: MutableList<Triple<Block, String, RegistryKey<ItemGroup>?>>
         get() = _blocks
+
+    val blockFactories: Map<BlockInit, BlockBuilderConfig>
+        get() = _blockFactories
 
     infix fun BlockInit.with(config: BlockBuilderConfig.() -> Unit) {
         val configObject = BlockBuilderConfig(this, itemGroup!!, settings)
         configObject.config()
         checkNotNull(configObject.name) { "Name must be specified for block." }
-        _blocks[this] = configObject
+        _blockFactories[this] = configObject
     }
 
     infix fun BlockInit.with(name: String) {
-        checkNotNull(itemGroup) { "Item group must be specified for block" }
-        _blocks[this] = BlockBuilderConfig(this, itemGroup!!, settings, name)
+        _blockFactories[this] = BlockBuilderConfig(this, itemGroup, settings, name)
+    }
+
+    infix fun Block.with(name: String) {
+        _blocks += Triple(this, name, itemGroup)
     }
 }
 
-fun register(init: RegistryInitializer.() -> Unit): RegistryHelper {
+fun register(init: RegistryInitializer.() -> Unit) {
     val registry = RegistryInitializer()
     registry.init()
-    return registry.build()
+    registry.build().register()
 }
 
 @RegistryDsl
 class RegistryInitializer {
-    private val blocks: MutableList<BlockConfig> = mutableListOf()
-    private val items: MutableList<ItemConfig> = mutableListOf()
+    private val blockFactories: MutableList<BlockConfig> = mutableListOf()
+    private val itemFactories: MutableList<ItemConfig> = mutableListOf()
+    private val items: MutableList<Triple<Item, String, RegistryKey<ItemGroup>>> = mutableListOf()
+    private val blocks: MutableList<Triple<Block, String, RegistryKey<ItemGroup>?>> = mutableListOf()
 
     fun items(init: ItemRegistryGroup.() -> Unit) {
         val itemGroup = ItemRegistryGroup()
         itemGroup.init()
         checkNotNull(itemGroup.settings) { "settings must not be null when registering items." }
         checkNotNull(itemGroup.itemGroup) { "Item group must not be null when registering items." }
-        items += itemGroup.items.map {(init, config)  -> ItemConfig(init, config.settings, Identifier.of(MOD_ID, config.name!!), config.itemGroup) }
+        itemFactories += itemGroup.itemFactories.map { (init, config)  -> ItemConfig(init, config.settings, Identifier.of(MOD_ID, config.name!!), config.itemGroup) }
+        items += itemGroup.items
     }
 
     fun blocks(init: BlockRegistryGroup.() -> Unit) {
         val blockGroup = BlockRegistryGroup()
         blockGroup.init()
         checkNotNull(blockGroup.settings) { "settings must not be null when registering items." }
-        blocks += blockGroup.blocks.map {(init, config)  -> BlockConfig(init, config.settings!!, Identifier.of(MOD_ID, config.name!!), config.itemGroup!!) }
+        blockFactories += blockGroup.blockFactories.map { (init, config)  -> BlockConfig(init, config.settings!!, Identifier.of(MOD_ID, config.name!!), config.itemGroup!!) }
+        blocks += blockGroup.blocks
     }
 
     fun build(): RegistryHelper {
-        return RegistryHelper(blocks, items)
+        return RegistryHelper(blockFactories, itemFactories, items, blocks)
     }
 }

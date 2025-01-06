@@ -13,18 +13,15 @@ import org.slf4j.LoggerFactory
 const val MOD_ID = "logic_thinkering"
 val logger: Logger = LoggerFactory.getLogger(MOD_ID)
 
+private val group = LogicThinkeringItemGroup.LOGICTHINKERING_GROUP
 fun initialize() {
     logger.info("Initializing Logic Thinkering mod, Kotlin side!")
 
-    val group = LogicThinkeringItemGroup.LOGICTHINKERING_GROUP
     register {
         items {
             itemGroup = group
-            ::ReinforcedCopperSword with "reinforced_copper_sword"
-            ::ReinforcedCopperShield with {
-                settings = Item.Settings().maxDamage(336)
-                name = "reinforced_copper_shield"
-            }
+            ReinforcedCopperSword() with "reinforced_copper_sword"
+            ReinforcedCopperShield() with "reinforced_copper_shield"
         }
         blocks {
             settings = Settings.copy(Blocks.REPEATER)
@@ -37,5 +34,5 @@ fun initialize() {
             ::NANDGate with "nand_gate"
             ::XNORGate with "xnor_gate"
         }
-    }.register()
+    }
 }
