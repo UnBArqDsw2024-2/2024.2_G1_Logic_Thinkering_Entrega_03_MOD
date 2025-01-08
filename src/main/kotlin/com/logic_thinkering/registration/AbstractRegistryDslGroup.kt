@@ -1,19 +1,23 @@
 package com.logic_thinkering.registration
 
+import com.logic_thinkering.MOD_GROUP
+import net.minecraft.item.ItemGroup
+import net.minecraft.registry.RegistryKey
 
+typealias Group = RegistryKey<ItemGroup>
 
-interface AbstractRegistryConfig<Type, Settings, Group> {
+interface IDSLConfig<Type, Settings> {
     var factory: (Settings) -> Type
     var itemGroup: Group
     var settings: Settings
     var name: String?
 }
 
-abstract class AbstractRegistryGroup<Type, Settings, Config : AbstractRegistryConfig<Type, Settings, Group>, Group> {
+abstract class AbstractRegistryDslGroup<Type, Settings, Config : IDSLConfig<Type, Settings>> {
     private val _factories: MutableList<Pair<(Settings) -> Type, Config>> = mutableListOf()
     private val _instances: MutableList<Triple<Type, String, Group>> = mutableListOf()
+    var itemGroup: Group = MOD_GROUP
 
-    abstract var itemGroup: Group
     abstract var settings: Settings
 
     val factories: List<Pair<(Settings) -> Type, Config>>

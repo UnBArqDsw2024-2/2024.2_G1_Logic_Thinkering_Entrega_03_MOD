@@ -10,21 +10,21 @@ import net.minecraft.util.Identifier
 @DslMarker
 annotation class RegistryDsl
 
-fun register(init: RegistryInitializer.() -> Unit) {
-    val registry = RegistryInitializer()
+fun register(init: RegistryDslInitializer.() -> Unit) {
+    val registry = RegistryDslInitializer()
     registry.init()
     registry.build().register()
 }
 
 @RegistryDsl
-class RegistryInitializer {
+class RegistryDslInitializer {
     private val blockFactories: MutableList<BlockConfig> = mutableListOf()
     private val itemFactories: MutableList<ItemConfig> = mutableListOf()
     private val items: MutableList<Triple<Item, String, RegistryKey<ItemGroup>>> = mutableListOf()
-    private val blocks: MutableList<Triple<Block, String, RegistryKey<ItemGroup>?>> = mutableListOf()
+    private val blocks: MutableList<Triple<Block, String, RegistryKey<ItemGroup>>> = mutableListOf()
 
-    fun items(init: ItemRegistryGroup.() -> Unit) {
-        val itemGroup = ItemRegistryGroup()
+    fun items(init: ItemRegistryDslGroup.() -> Unit) {
+        val itemGroup = ItemRegistryDslGroup()
         itemGroup.init()
         itemFactories += itemGroup.factories.map { (init, config) ->
             val id = Identifier.of(MOD_ID, config.name) ?: throw NullPointerException("Item name must be set")
@@ -33,8 +33,8 @@ class RegistryInitializer {
         items += itemGroup.instances
     }
 
-    fun blocks(init: BlockRegistryGroup.() -> Unit) {
-        val blockGroup = BlockRegistryGroup()
+    fun blocks(init: BlockRegistryDslGroup.() -> Unit) {
+        val blockGroup = BlockRegistryDslGroup()
         blockGroup.init()
         blockFactories += blockGroup.factories.map { (init, config)  -> BlockConfig(init, config.settings, Identifier.of(MOD_ID, config.name ?: "error"), config.itemGroup) }
         blocks += blockGroup.instances

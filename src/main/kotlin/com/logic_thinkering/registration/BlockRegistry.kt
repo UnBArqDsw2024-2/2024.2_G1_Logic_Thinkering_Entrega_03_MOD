@@ -6,18 +6,17 @@ import net.minecraft.item.ItemGroup
 import net.minecraft.registry.RegistryKey
 
 
-data class BlockBuilderConfig(
+data class BlockDSLConfig(
     override var factory: BlockFactory,
-    override var itemGroup: RegistryKey<ItemGroup>?,
+    override var itemGroup: RegistryKey<ItemGroup>,
     override var settings: AbstractBlock.Settings,
     override var name: String? = null
-) : AbstractRegistryConfig<Block, AbstractBlock.Settings, RegistryKey<ItemGroup>?>
+) : IDSLConfig<Block, AbstractBlock.Settings>
 
 @RegistryDsl
-class BlockRegistryGroup : AbstractRegistryGroup<Block, AbstractBlock.Settings, BlockBuilderConfig, RegistryKey<ItemGroup>?>() {
+class BlockRegistryDslGroup : AbstractRegistryDslGroup<Block, AbstractBlock.Settings, BlockDSLConfig>() {
     override var settings: AbstractBlock.Settings = AbstractBlock.Settings.create()
-    override var itemGroup: RegistryKey<ItemGroup>? = null
 
     override fun createConfig(factory: (AbstractBlock.Settings) -> Block, name: String?) =
-        BlockBuilderConfig(factory, itemGroup, settings, name)
+        BlockDSLConfig(factory, itemGroup, settings, name)
 }

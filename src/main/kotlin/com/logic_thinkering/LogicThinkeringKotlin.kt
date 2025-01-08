@@ -22,7 +22,6 @@ fun initialize() = register {
     }
     blocks {
         settings = Settings.copy(Blocks.REPEATER)
-        itemGroup = MOD_GROUP
         ::ORGate with "or_gate"
         ::ANDGate with "and_gate"
         ::XORGate with "xor_gate"
