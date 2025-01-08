@@ -7,7 +7,7 @@ import net.minecraft.registry.RegistryKey
 
 
 data class BlockBuilderConfig(
-    override var factory: BlockInit,
+    override var factory: BlockFactory,
     override var itemGroup: RegistryKey<ItemGroup>?,
     override var settings: AbstractBlock.Settings,
     override var name: String? = null

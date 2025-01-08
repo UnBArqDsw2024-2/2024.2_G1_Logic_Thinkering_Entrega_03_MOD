@@ -1,6 +1,7 @@
 package com.logic_thinkering.registration
 
 import com.logic_thinkering.MOD_ID
+import com.logic_thinkering.logger
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents
 import net.minecraft.block.AbstractBlock.Settings
 import net.minecraft.block.Block
@@ -13,11 +14,11 @@ import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
 import net.minecraft.util.Identifier
 
-typealias BlockInit = (Settings) -> Block
+typealias BlockFactory = (Settings) -> Block
 typealias ItemFactory = (Item.Settings) -> Item
 
 data class BlockConfig (
-    val blockInit: BlockInit,
+    val blockFactory: BlockFactory,
     val settings: Settings,
     val id: Identifier,
     val itemGroup: RegistryKey<ItemGroup>?,
@@ -41,7 +42,8 @@ class RegistryHelper (
         val key = RegistryKey.of(RegistryKeys.BLOCK, blockConfig.id)
         blockConfig.settings.registryKey(key)
 
-        val block = blockConfig.blockInit(blockConfig.settings)
+        val block = blockConfig.blockFactory(blockConfig.settings)
+        logger.info("Registering {} as {}", blockConfig.id, block.name)
         Registry.register(Registries.BLOCK, key, block)
         if (blockConfig.itemGroup == null)
             return

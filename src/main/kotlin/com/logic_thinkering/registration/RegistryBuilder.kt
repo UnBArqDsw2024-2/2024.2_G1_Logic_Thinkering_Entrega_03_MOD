@@ -36,7 +36,7 @@ class RegistryInitializer {
     fun blocks(init: BlockRegistryGroup.() -> Unit) {
         val blockGroup = BlockRegistryGroup()
         blockGroup.init()
-        blockFactories += blockGroup.factories.map { (init, config)  -> BlockConfig(init, config.settings, Identifier.of(MOD_ID, config.name!!), config.itemGroup!!) }
+        blockFactories += blockGroup.factories.map { (init, config)  -> BlockConfig(init, config.settings, Identifier.of(MOD_ID, config.name ?: "error"), config.itemGroup) }
         blocks += blockGroup.instances
     }
 
