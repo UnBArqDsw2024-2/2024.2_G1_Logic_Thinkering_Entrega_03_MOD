@@ -1,6 +1,5 @@
 package com.logic_thinkering.registration
 
-import com.logic_thinkering.MOD_ID
 import com.logic_thinkering.logger
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents
 import net.minecraft.block.AbstractBlock.Settings
@@ -18,72 +17,58 @@ typealias BlockFactory = (Settings) -> Block
 typealias ItemFactory = (Item.Settings) -> Item
 
 data class BlockConfig (
-    val blockFactory: BlockFactory,
+    val factory: BlockFactory,
     val settings: Settings,
     val id: Identifier,
-    val itemGroup: RegistryKey<ItemGroup>?,
+    val itemGroup: RegistryKey<ItemGroup>,
 )
 
 data class ItemConfig (
-    val itemFactory: ItemFactory,
+    val factory: ItemFactory,
     val settings: Item.Settings,
     val id: Identifier,
     val itemGroup: RegistryKey<ItemGroup>,
 )
 
+private fun registerItem(id: Identifier, item: Item, group: RegistryKey<ItemGroup>) {
+    logger.info("Registering item {}", id)
+    Registry.register(Registries.ITEM, id, item)
+    ItemGroupEvents.modifyEntriesEvent(group).register {it.add(item)}
+}
+
+private fun registerBlock(id: Identifier, block: Block, group: RegistryKey<ItemGroup>?) {
+    Registry.register(Registries.BLOCK, id, block)
+    if (group == null) return
+    val itemKey = RegistryKey.of(RegistryKeys.ITEM, id)
+    val itemSettings = Item.Settings()
+        .useBlockPrefixedTranslationKey()
+        .registryKey(itemKey)
+    val item = BlockItem(block, itemSettings)
+    registerItem(id, item, group)
+}
+
 class RegistryHelper (
     private val blockConfigs: List<BlockConfig>,
     private val itemConfigs: List<ItemConfig>,
-    private val items: MutableList<Triple<Item, String, RegistryKey<ItemGroup>>>,
-    private val blocks: MutableList<Triple<Block, String, RegistryKey<ItemGroup>?>> = mutableListOf()
+    // TODO: change string to id
+    private val items: MutableList<Triple<Item, Identifier, RegistryKey<ItemGroup>>> = mutableListOf(),
+    private val blocks: MutableList<Triple<Block, Identifier, RegistryKey<ItemGroup>>> = mutableListOf()
 ) {
 
     private fun registerBlockConfig(blockConfig: BlockConfig) {
-        val key = RegistryKey.of(RegistryKeys.BLOCK, blockConfig.id)
-        blockConfig.settings.registryKey(key)
-
-        val block = blockConfig.blockFactory(blockConfig.settings)
-        logger.info("Registering {} as {}", blockConfig.id, block.name)
-        Registry.register(Registries.BLOCK, key, block)
-        if (blockConfig.itemGroup == null)
-            return
-        val itemKey = RegistryKey.of(RegistryKeys.ITEM, blockConfig.id)
-        val itemSettings = Item.Settings()
-            .useBlockPrefixedTranslationKey()
-            .registryKey(itemKey)
-        val item = BlockItem(block, itemSettings)
-        Registry.register(Registries.ITEM, blockConfig.id, item)
-        ItemGroupEvents.modifyEntriesEvent(blockConfig.itemGroup).register {it.add(item)}
+        val block = blockConfig.factory(blockConfig.settings)
+        registerBlock(blockConfig.id, block, blockConfig.itemGroup)
     }
 
     private fun registerItemConfig(itemConfig: ItemConfig) {
-        val itemKey = RegistryKey.of(RegistryKeys.ITEM, itemConfig.id)
-        val itemSettings = Item.Settings()
-            .useBlockPrefixedTranslationKey()
-            .registryKey(itemKey)
-        val item = itemConfig.itemFactory(itemSettings)
-        Registry.register(Registries.ITEM, itemConfig.id, item)
-        ItemGroupEvents.modifyEntriesEvent(itemConfig.itemGroup).register {it.add(item)}
+        val item = itemConfig.factory(itemConfig.settings)
+        registerItem(itemConfig.id, item, itemConfig.itemGroup)
     }
 
     fun register() {
         blockConfigs.forEach(::registerBlockConfig)
         itemConfigs.forEach(::registerItemConfig)
-        items.forEach { (item, name, group) ->
-            Registry.register(Registries.ITEM, Identifier.of(name), item)
-            ItemGroupEvents.modifyEntriesEvent(group).register {it.add(item)}
-        }
-        blocks.forEach { (block, name, group) ->
-            val id = Identifier.of(MOD_ID,name)
-            Registry.register(Registries.BLOCK,  id, block)
-            if (group == null) return
-            val itemKey = RegistryKey.of(RegistryKeys.ITEM, id)
-            val itemSettings = Item.Settings()
-                .useBlockPrefixedTranslationKey()
-                .registryKey(itemKey)
-            val item = BlockItem(block, itemSettings)
-            Registry.register(Registries.ITEM, id, item)
-            ItemGroupEvents.modifyEntriesEvent(group).register {it.add(item)}
-        }
+        items.forEach { (item, id, group) -> registerItem(id, item, group) }
+        blocks.forEach { (block, id, group) -> registerBlock(id, block, group) }
     }
 }
