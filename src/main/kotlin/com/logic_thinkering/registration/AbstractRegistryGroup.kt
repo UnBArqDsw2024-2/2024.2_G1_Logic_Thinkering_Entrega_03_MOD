@@ -10,8 +10,8 @@ interface AbstractRegistryConfig<Type, Settings, Group> {
 }
 
 abstract class AbstractRegistryGroup<Type, Settings, Config : AbstractRegistryConfig<Type, Settings, Group>, Group> {
-    protected val _factories: MutableList<Pair<(Settings) -> Type, Config>> = mutableListOf()
-    protected val _instances: MutableList<Triple<Type, String, Group>> = mutableListOf()
+    private val _factories: MutableList<Pair<(Settings) -> Type, Config>> = mutableListOf()
+    private val _instances: MutableList<Triple<Type, String, Group>> = mutableListOf()
 
     abstract var itemGroup: Group
     abstract var settings: Settings
