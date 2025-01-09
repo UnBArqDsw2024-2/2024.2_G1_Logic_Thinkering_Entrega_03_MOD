@@ -16,19 +16,15 @@ import net.minecraft.util.Identifier
 typealias BlockFactory = (Settings) -> Block
 typealias ItemFactory = (Item.Settings) -> Item
 
-data class BlockConfig (
-    val factory: BlockFactory,
-    val settings: Settings,
-    val id: Identifier,
-    val itemGroup: RegistryKey<ItemGroup>,
-)
+@DslMarker
+annotation class RegistryDsl
 
-data class ItemConfig (
-    val factory: ItemFactory,
-    val settings: Item.Settings,
-    val id: Identifier,
-    val itemGroup: RegistryKey<ItemGroup>,
-)
+fun register(init: RegistryDslInitializer.() -> Unit) {
+    val registry = RegistryDslInitializer()
+    registry.init()
+    registry.register()
+}
+
 
 private fun registerItem(id: Identifier, item: Item, group: RegistryKey<ItemGroup>) {
     logger.info("Registering item {}", id)
@@ -47,27 +43,24 @@ private fun registerBlock(id: Identifier, block: Block, group: RegistryKey<ItemG
     registerItem(id, item, group)
 }
 
-class RegistryHelper (
-    private val blockConfigs: List<BlockConfig>,
-    private val itemConfigs: List<ItemConfig>,
-    // TODO: change string to id
-    private val items: MutableList<Triple<Item, Identifier, RegistryKey<ItemGroup>>> = mutableListOf(),
+@RegistryDsl
+class RegistryDslInitializer {
+    private val items: MutableList<Triple<Item, Identifier, RegistryKey<ItemGroup>>> = mutableListOf()
     private val blocks: MutableList<Triple<Block, Identifier, RegistryKey<ItemGroup>>> = mutableListOf()
-) {
 
-    private fun registerBlockConfig(blockConfig: BlockConfig) {
-        val block = blockConfig.factory(blockConfig.settings)
-        registerBlock(blockConfig.id, block, blockConfig.itemGroup)
+    fun items(init: ItemRegistryDslGroup.() -> Unit) {
+        val itemGroup = ItemRegistryDslGroup()
+        itemGroup.init()
+        items += itemGroup.instances
     }
 
-    private fun registerItemConfig(itemConfig: ItemConfig) {
-        val item = itemConfig.factory(itemConfig.settings)
-        registerItem(itemConfig.id, item, itemConfig.itemGroup)
+    fun blocks(init: BlockRegistryDslGroup.() -> Unit) {
+        val blockGroup = BlockRegistryDslGroup()
+        blockGroup.init()
+        blocks += blockGroup.instances
     }
 
     fun register() {
-        blockConfigs.forEach(::registerBlockConfig)
-        itemConfigs.forEach(::registerItemConfig)
         items.forEach { (item, id, group) -> registerItem(id, item, group) }
         blocks.forEach { (block, id, group) -> registerBlock(id, block, group) }
     }
