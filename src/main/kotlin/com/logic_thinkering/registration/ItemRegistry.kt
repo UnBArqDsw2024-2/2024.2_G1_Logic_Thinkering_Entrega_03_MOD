@@ -5,12 +5,11 @@ import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
 import net.minecraft.util.Identifier
 
-data class ItemDSLConfig (
-    override var itemGroup: Group,
-    override var settings: Item.Settings,
-) : IDSLConfig<Item, Item.Settings>
+class ItemDSLConfig : IDSLConfig<Item.Settings> {
+    override var itemGroup: Group? = null
+    override var settings: Item.Settings? = null
+}
 
-@RegistryDsl
 class ItemRegistryDslGroup : AbstractRegistryDslGroup<Item, Item.Settings, ItemDSLConfig>() {
     override var settings: Item.Settings = Item.Settings()
     override fun instantiate(factory: (Item.Settings) -> Item, id: Identifier, settings: Item.Settings): Item {
@@ -19,5 +18,5 @@ class ItemRegistryDslGroup : AbstractRegistryDslGroup<Item, Item.Settings, ItemD
         return factory(settings)
     }
 
-    override fun createConfig() = ItemDSLConfig(itemGroup, settings)
+    override fun createConfig() = ItemDSLConfig()
 }

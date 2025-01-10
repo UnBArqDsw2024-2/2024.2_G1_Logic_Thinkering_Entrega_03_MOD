@@ -19,23 +19,22 @@ fun register(init: RegistryDslInitializer.() -> Unit) {
     RegistryDslInitializer().apply(init).register()
 }
 
-fun registerItem(id: Identifier, item: Item, group: RegistryKey<ItemGroup>) {
-    logger.info("Registering item {}", id)
-    Registry.register(Registries.ITEM, id, item)
-    ItemGroupEvents.modifyEntriesEvent(group).register {it.add(item)}
+private fun registerItem(entry: RegistryEntry<Item>) {
+    logger.info("Registering item {}", entry.id)
+    Registry.register(Registries.ITEM, entry.id, entry.element)
+    ItemGroupEvents.modifyEntriesEvent(entry.group).register {it.add(entry.element)}
 }
 
-private fun registerBlock(id: Identifier, block: Block, group: RegistryKey<ItemGroup>?) {
-    logger.info("Registering block {}", id)
-    Registry.register(Registries.BLOCK, id, block)
-    group?.let {
-        val itemKey = RegistryKey.of(RegistryKeys.ITEM, id)
-        val itemSettings = Item.Settings()
-            .useBlockPrefixedTranslationKey()
-            .registryKey(itemKey)
-        val item = BlockItem(block, itemSettings)
-        registerItem(id, item, group)
-    }
+private fun registerBlock(entry: RegistryEntry<Block>) {
+    logger.info("Registering block {}", entry.id)
+    Registry.register(Registries.BLOCK, entry.id, entry.element)
+    val itemKey = RegistryKey.of(RegistryKeys.ITEM, entry.id)
+    val itemSettings = Item.Settings()
+        .useBlockPrefixedTranslationKey()
+        .registryKey(itemKey)
+    val item = BlockItem(entry.element, itemSettings)
+    Registry.register(Registries.ITEM, entry.id, item)
+    ItemGroupEvents.modifyEntriesEvent(entry.group).register {it.add(item)}
 }
 
 data class RegistryEntry<T>(
@@ -55,11 +54,10 @@ class RegistryDslInitializer {
 
     fun blocks(init: BlockRegistryDslGroup.() -> Unit) {
         blocks += BlockRegistryDslGroup().apply(init).instances
-
     }
 
     fun register() {
-        items.forEach { (item, id, group) -> registerItem(id, item, group) }
-        blocks.forEach { (block, id, group) -> registerBlock(id, block, group) }
+        items.forEach(::registerItem)
+        blocks.forEach(::registerBlock)
     }
 }

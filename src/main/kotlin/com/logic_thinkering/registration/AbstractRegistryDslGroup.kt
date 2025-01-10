@@ -8,12 +8,13 @@ import net.minecraft.util.Identifier
 
 typealias Group = RegistryKey<ItemGroup>
 
-interface IDSLConfig<Type, Settings> {
-    var itemGroup: Group
-    var settings: Settings
+interface IDSLConfig<Settings> {
+    var itemGroup: Group?
+    var settings: Settings?
 }
 
-abstract class AbstractRegistryDslGroup<Type, Settings, Config : IDSLConfig<Type, Settings>> {
+@RegistryDsl
+abstract class AbstractRegistryDslGroup<Type, Settings, Config : IDSLConfig<Settings>> {
     private val _instances: MutableList<RegistryEntry<Type>> = mutableListOf()
     var itemGroup: Group = MOD_GROUP
 
@@ -25,7 +26,7 @@ abstract class AbstractRegistryDslGroup<Type, Settings, Config : IDSLConfig<Type
     fun ((Settings) -> Type).with(name: String, init: Config.() -> Unit) {
         val id = Identifier.of(MOD_ID, name)
         val config = createConfig().apply(init)
-        addInstance(instantiate(this, id, config.settings), id)
+        addInstance(instantiate(this, id, config.settings ?: settings), id, config.itemGroup)
     }
 
     infix fun ((Settings) -> Type).with(name: String) {
@@ -37,8 +38,8 @@ abstract class AbstractRegistryDslGroup<Type, Settings, Config : IDSLConfig<Type
         addInstance(this, Identifier.of(MOD_ID, name))
     }
 
-    private fun addInstance(instance: Type, id: Identifier) {
-        _instances += RegistryEntry(instance, id, itemGroup)
+    private fun addInstance(instance: Type, id: Identifier, group: RegistryKey<ItemGroup>? = null) {
+        _instances += RegistryEntry(instance, id, group ?: itemGroup)
     }
 
     abstract fun createConfig(): Config

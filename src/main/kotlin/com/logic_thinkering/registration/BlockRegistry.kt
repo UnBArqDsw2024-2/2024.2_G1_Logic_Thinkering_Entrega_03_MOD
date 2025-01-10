@@ -8,12 +8,11 @@ import net.minecraft.registry.RegistryKeys
 import net.minecraft.util.Identifier
 
 
-data class BlockDSLConfig(
-    override var itemGroup: RegistryKey<ItemGroup>,
-    override var settings: AbstractBlock.Settings,
-) : IDSLConfig<Block, AbstractBlock.Settings>
+class BlockDSLConfig: IDSLConfig<AbstractBlock.Settings>{
+    override var itemGroup: RegistryKey<ItemGroup>? = null
+    override var settings: AbstractBlock.Settings? = null
+ }
 
-@RegistryDsl
 class BlockRegistryDslGroup : AbstractRegistryDslGroup<Block, AbstractBlock.Settings, BlockDSLConfig>() {
     override var settings: AbstractBlock.Settings = AbstractBlock.Settings.create()
     override fun instantiate(
@@ -27,5 +26,5 @@ class BlockRegistryDslGroup : AbstractRegistryDslGroup<Block, AbstractBlock.Sett
         return factory(settings)
     }
 
-    override fun createConfig() = BlockDSLConfig(itemGroup, settings)
+    override fun createConfig() = BlockDSLConfig()
 }
