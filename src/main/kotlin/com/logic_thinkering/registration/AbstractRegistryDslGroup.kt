@@ -9,42 +9,38 @@ import net.minecraft.util.Identifier
 typealias Group = RegistryKey<ItemGroup>
 
 interface IDSLConfig<Type, Settings> {
-    var factory: (Settings) -> Type
     var itemGroup: Group
     var settings: Settings
-    var id: Identifier?
-
-    fun name(name: String) {
-        id = Identifier.of(MOD_ID, name)
-    }
 }
 
 abstract class AbstractRegistryDslGroup<Type, Settings, Config : IDSLConfig<Type, Settings>> {
-    private val _instances: MutableList<Triple<Type, Identifier, Group>> = mutableListOf()
+    private val _instances: MutableList<RegistryEntry<Type>> = mutableListOf()
     var itemGroup: Group = MOD_GROUP
 
     abstract var settings: Settings
 
-
-    val instances: List<Triple<Type, Identifier, Group>>
+    val instances: List<RegistryEntry<Type>>
     get() = _instances
 
-    infix fun ((Settings) -> Type).with(init: Config.() -> Unit) {
-        val configObject = createConfig(this)
-        configObject.init()
-        checkNotNull(configObject.id) { "Name must be specified." }
-        _instances += Triple(createInstance(this, configObject.id!!, configObject.settings), configObject.id!!, itemGroup)
+    fun ((Settings) -> Type).with(name: String, init: Config.() -> Unit) {
+        val id = Identifier.of(MOD_ID, name)
+        val config = createConfig().apply(init)
+        addInstance(instantiate(this, id, config.settings), id)
     }
 
     infix fun ((Settings) -> Type).with(name: String) {
         val id = Identifier.of(MOD_ID, name)
-        _instances += Triple(createInstance(this, id, settings), id,  itemGroup)
+        addInstance(instantiate(this, id, settings), id)
     }
 
     infix fun Type.with(name: String) {
-        _instances += Triple(this, Identifier.of(MOD_ID, name), itemGroup)
+        addInstance(this, Identifier.of(MOD_ID, name))
     }
 
-    abstract fun createConfig(factory: (Settings) -> Type, name: String? = null): Config
-    abstract fun createInstance(factory: (Settings) -> Type, id: Identifier, settings: Settings): Type
+    private fun addInstance(instance: Type, id: Identifier) {
+        _instances += RegistryEntry(instance, id, itemGroup)
+    }
+
+    abstract fun createConfig(): Config
+    abstract fun instantiate(factory: (Settings) -> Type, id: Identifier, settings: Settings): Type
 }

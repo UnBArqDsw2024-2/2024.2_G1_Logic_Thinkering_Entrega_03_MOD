@@ -2,7 +2,6 @@ package com.logic_thinkering.registration
 
 import com.logic_thinkering.logger
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents
-import net.minecraft.block.AbstractBlock.Settings
 import net.minecraft.block.Block
 import net.minecraft.item.BlockItem
 import net.minecraft.item.Item
@@ -13,51 +12,50 @@ import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
 import net.minecraft.util.Identifier
 
-typealias BlockFactory = (Settings) -> Block
-typealias ItemFactory = (Item.Settings) -> Item
-
 @DslMarker
 annotation class RegistryDsl
 
 fun register(init: RegistryDslInitializer.() -> Unit) {
-    val registry = RegistryDslInitializer()
-    registry.init()
-    registry.register()
+    RegistryDslInitializer().apply(init).register()
 }
 
-
-private fun registerItem(id: Identifier, item: Item, group: RegistryKey<ItemGroup>) {
+fun registerItem(id: Identifier, item: Item, group: RegistryKey<ItemGroup>) {
     logger.info("Registering item {}", id)
     Registry.register(Registries.ITEM, id, item)
     ItemGroupEvents.modifyEntriesEvent(group).register {it.add(item)}
 }
 
 private fun registerBlock(id: Identifier, block: Block, group: RegistryKey<ItemGroup>?) {
+    logger.info("Registering block {}", id)
     Registry.register(Registries.BLOCK, id, block)
-    if (group == null) return
-    val itemKey = RegistryKey.of(RegistryKeys.ITEM, id)
-    val itemSettings = Item.Settings()
-        .useBlockPrefixedTranslationKey()
-        .registryKey(itemKey)
-    val item = BlockItem(block, itemSettings)
-    registerItem(id, item, group)
+    group?.let {
+        val itemKey = RegistryKey.of(RegistryKeys.ITEM, id)
+        val itemSettings = Item.Settings()
+            .useBlockPrefixedTranslationKey()
+            .registryKey(itemKey)
+        val item = BlockItem(block, itemSettings)
+        registerItem(id, item, group)
+    }
 }
+
+data class RegistryEntry<T>(
+    val element: T,
+    val id: Identifier,
+    val group: RegistryKey<ItemGroup>
+)
 
 @RegistryDsl
 class RegistryDslInitializer {
-    private val items: MutableList<Triple<Item, Identifier, RegistryKey<ItemGroup>>> = mutableListOf()
-    private val blocks: MutableList<Triple<Block, Identifier, RegistryKey<ItemGroup>>> = mutableListOf()
+    private val items: MutableList<RegistryEntry<Item>> = mutableListOf()
+    private val blocks: MutableList<RegistryEntry<Block>> = mutableListOf()
 
     fun items(init: ItemRegistryDslGroup.() -> Unit) {
-        val itemGroup = ItemRegistryDslGroup()
-        itemGroup.init()
-        items += itemGroup.instances
+        items += ItemRegistryDslGroup().apply(init).instances
     }
 
     fun blocks(init: BlockRegistryDslGroup.() -> Unit) {
-        val blockGroup = BlockRegistryDslGroup()
-        blockGroup.init()
-        blocks += blockGroup.instances
+        blocks += BlockRegistryDslGroup().apply(init).instances
+
     }
 
     fun register() {

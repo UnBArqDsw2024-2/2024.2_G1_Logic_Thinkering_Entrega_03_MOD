@@ -17,7 +17,8 @@ public class Main implements ModInitializer {
 		ModScreenHandlers.inicializa();
 		NetworkRegistry.registerPackets();
 		Blocos.inicializa();
-		new LogicThinkeringItem();
+		// TODO: tirar conflitos de itens reforçados
+//		new LogicThinkeringItem();
 		LogicThinkeringKotlinKt.initialize();
 		LOGGER.info("OK");
 	}
